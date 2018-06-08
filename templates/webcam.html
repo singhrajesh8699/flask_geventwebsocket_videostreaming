@@ -1,0 +1,51 @@
+<html>                                                                           
+<head>                                                                           
+    <title>Video stream using WebSocket</title>                                                   
+</head>                                                                          
+<body>
+    <div>
+        <div>web access</div>
+        <video id="vid" width="320" height="240" autoplay="autoplay" style="position:absolute;"></video>
+        <canvas id="can" width="320"  height="240" style="position:absolute;"></canvas>
+        <img id="img" src="" width="320"  height="240" style="position:absolute;">
+    </div>
+    <script type="text/javascript">
+        var video = document.getElementById("vid");
+        var canvas = document.getElementById("can");
+        var img = document.getElementById("img");
+
+        navigator.getUserMedia = navigator.getUserMedia    || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        if(navigator.getUserMedia){
+            navigator.getUserMedia({video:true},handleVideo,videoError);
+        }
+
+        function handleVideo(stream){
+            video.src = webkitURL.createObjectURL(stream);
+        }
+
+        function videoError(e){
+            alert('Unable to get video stream!')
+        }
+
+        var ctx = canvas.getContext('2d');
+        timer = setInterval(
+            function () {
+                ctx.drawImage(video, 0, 0, 320, 240);
+                var base64dataUri = canvas.toDataURL('image/jpeg', 1.0);
+                ws.send(base64dataUri);
+          }, 400);
+   
+        var ws = new WebSocket("ws://" + document.domain + ":5000/webcam");
+        ws.onopen = function () {
+            console.log("Openened connection to websocket");
+        }
+        ws.onmessage = function (msg) {
+            img.src = 'data:image/jpeg;base64,' + msg.data
+        };
+        ws.onerror = function(e) {
+            console.log(e);
+        }
+        
+    </script>
+</body>                                                                          
+</html>
